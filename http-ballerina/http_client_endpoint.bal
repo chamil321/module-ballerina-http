@@ -16,7 +16,7 @@
 
 import ballerina/jballerina.java;
 import ballerina/crypto;
-import ballerina/time;
+// import ballerina/time;
 import ballerina/observe;
 
 ////////////////////////////////
@@ -475,154 +475,155 @@ function initialize(string serviceUrl, ClientConfiguration config, CookieStore? 
         int lastIndex = url.length() - 1;
         url = url.substring(0, lastIndex);
     }
-    var cbConfig = config.circuitBreaker;
-    if (cbConfig is CircuitBreakerConfig) {
-        if (url.endsWith("/")) {
-            int lastIndex = url.length() - 1;
-            url = url.substring(0, lastIndex);
-        }
-    } else {
-        httpClientRequired = true;
-    }
-    if (httpClientRequired) {
-        var redirectConfigVal = config.followRedirects;
-        if (redirectConfigVal is FollowRedirects) {
-            return createRedirectClient(url, config, cookieStore);
-        } else {
-            return checkForRetry(url, config, cookieStore);
-        }
-    } else {
-        return createCircuitBreakerClient(url, config, cookieStore);
-    }
+    return createClient(url, config);
+    // var cbConfig = config.circuitBreaker;
+    // if (cbConfig is CircuitBreakerConfig) {
+    //     if (url.endsWith("/")) {
+    //         int lastIndex = url.length() - 1;
+    //         url = url.substring(0, lastIndex);
+    //     }
+    // } else {
+    //     httpClientRequired = true;
+    // }
+    // if (httpClientRequired) {
+    //     var redirectConfigVal = config.followRedirects;
+    //     if (redirectConfigVal is FollowRedirects) {
+    //         return createRedirectClient(url, config, cookieStore);
+    //     } else {
+    //         return checkForRetry(url, config, cookieStore);
+    //     }
+    // } else {
+    //     return createCircuitBreakerClient(url, config, cookieStore);
+    // }
 }
 
-function createRedirectClient(string url, ClientConfiguration configuration, CookieStore? cookieStore) returns HttpClient|ClientError {
-    var redirectConfig = configuration.followRedirects;
-    if (redirectConfig is FollowRedirects) {
-        if (redirectConfig.enabled) {
-            var retryClient = createRetryClient(url, configuration, cookieStore);
-            if (retryClient is HttpClient) {
-                return new RedirectClient(url, configuration, redirectConfig, retryClient);
-            } else {
-                return retryClient;
-            }
-        } else {
-            return createRetryClient(url, configuration, cookieStore);
-        }
-    } else {
-        return createRetryClient(url, configuration, cookieStore);
-    }
-}
+// function createRedirectClient(string url, ClientConfiguration configuration, CookieStore? cookieStore) returns HttpClient|ClientError {
+//     var redirectConfig = configuration.followRedirects;
+//     if (redirectConfig is FollowRedirects) {
+//         if (redirectConfig.enabled) {
+//             var retryClient = createRetryClient(url, configuration, cookieStore);
+//             if (retryClient is HttpClient) {
+//                 return new RedirectClient(url, configuration, redirectConfig, retryClient);
+//             } else {
+//                 return retryClient;
+//             }
+//         } else {
+//             return createRetryClient(url, configuration, cookieStore);
+//         }
+//     } else {
+//         return createRetryClient(url, configuration, cookieStore);
+//     }
+// }
 
-function checkForRetry(string url, ClientConfiguration config, CookieStore? cookieStore) returns HttpClient|ClientError {
-    var retryConfigVal = config.retryConfig;
-    if (retryConfigVal is RetryConfig) {
-        return createRetryClient(url, config, cookieStore);
-    } else {
-         return createCookieClient(url, config, cookieStore);
-    }
-}
+// function checkForRetry(string url, ClientConfiguration config, CookieStore? cookieStore) returns HttpClient|ClientError {
+//     var retryConfigVal = config.retryConfig;
+//     if (retryConfigVal is RetryConfig) {
+//         return createRetryClient(url, config, cookieStore);
+//     } else {
+//          return createCookieClient(url, config, cookieStore);
+//     }
+// }
 
-function createCircuitBreakerClient(string uri, ClientConfiguration configuration, CookieStore? cookieStore) returns HttpClient|ClientError {
-    HttpClient cbHttpClient;
-    var cbConfig = configuration.circuitBreaker;
-    if (cbConfig is CircuitBreakerConfig) {
-        validateCircuitBreakerConfiguration(cbConfig);
-        boolean[] statusCodes = populateErrorCodeIndex(cbConfig.statusCodes);
-        var redirectConfig = configuration.followRedirects;
-        if (redirectConfig is FollowRedirects) {
-            var redirectClient = createRedirectClient(uri, configuration, cookieStore);
-            if (redirectClient is HttpClient) {
-                cbHttpClient = redirectClient;
-            } else {
-                return redirectClient;
-            }
-        } else {
-            var retryClient = checkForRetry(uri, configuration, cookieStore);
-            if (retryClient is HttpClient) {
-                cbHttpClient = retryClient;
-            } else {
-                return retryClient;
-            }
-        }
+// function createCircuitBreakerClient(string uri, ClientConfiguration configuration, CookieStore? cookieStore) returns HttpClient|ClientError {
+//     HttpClient cbHttpClient;
+//     var cbConfig = configuration.circuitBreaker;
+//     if (cbConfig is CircuitBreakerConfig) {
+//         validateCircuitBreakerConfiguration(cbConfig);
+//         boolean[] statusCodes = populateErrorCodeIndex(cbConfig.statusCodes);
+//         var redirectConfig = configuration.followRedirects;
+//         if (redirectConfig is FollowRedirects) {
+//             var redirectClient = createRedirectClient(uri, configuration, cookieStore);
+//             if (redirectClient is HttpClient) {
+//                 cbHttpClient = redirectClient;
+//             } else {
+//                 return redirectClient;
+//             }
+//         } else {
+//             var retryClient = checkForRetry(uri, configuration, cookieStore);
+//             if (retryClient is HttpClient) {
+//                 cbHttpClient = retryClient;
+//             } else {
+//                 return retryClient;
+//             }
+//         }
 
-        time:Time circuitStartTime = time:currentTime();
-        int numberOfBuckets = (cbConfig.rollingWindow.timeWindowInMillis / cbConfig.rollingWindow.bucketSizeInMillis);
-        Bucket?[] bucketArray = [];
-        int bucketIndex = 0;
-        while (bucketIndex < numberOfBuckets) {
-            bucketArray[bucketIndex] = {};
-            bucketIndex = bucketIndex + 1;
-        }
+//         time:Time circuitStartTime = time:currentTime();
+//         int numberOfBuckets = (cbConfig.rollingWindow.timeWindowInMillis / cbConfig.rollingWindow.bucketSizeInMillis);
+//         Bucket?[] bucketArray = [];
+//         int bucketIndex = 0;
+//         while (bucketIndex < numberOfBuckets) {
+//             bucketArray[bucketIndex] = {};
+//             bucketIndex = bucketIndex + 1;
+//         }
 
-        CircuitBreakerInferredConfig circuitBreakerInferredConfig = {
-            failureThreshold: cbConfig.failureThreshold,
-            resetTimeInMillis: cbConfig.resetTimeInMillis,
-            statusCodes: statusCodes,
-            noOfBuckets: numberOfBuckets,
-            rollingWindow: cbConfig.rollingWindow
-        };
-        CircuitHealth circuitHealth = {
-            startTime: circuitStartTime,
-            lastRequestTime: circuitStartTime,
-            lastErrorTime: circuitStartTime,
-            lastForcedOpenTime: circuitStartTime,
-            totalBuckets: bucketArray
-        };
-        return new CircuitBreakerClient(uri, configuration, circuitBreakerInferredConfig, cbHttpClient, circuitHealth);
-    } else {
-        return createCookieClient(uri, configuration, cookieStore);
-    }
-}
+//         CircuitBreakerInferredConfig circuitBreakerInferredConfig = {
+//             failureThreshold: cbConfig.failureThreshold,
+//             resetTimeInMillis: cbConfig.resetTimeInMillis,
+//             statusCodes: statusCodes,
+//             noOfBuckets: numberOfBuckets,
+//             rollingWindow: cbConfig.rollingWindow
+//         };
+//         CircuitHealth circuitHealth = {
+//             startTime: circuitStartTime,
+//             lastRequestTime: circuitStartTime,
+//             lastErrorTime: circuitStartTime,
+//             lastForcedOpenTime: circuitStartTime,
+//             totalBuckets: bucketArray
+//         };
+//         return new CircuitBreakerClient(uri, configuration, circuitBreakerInferredConfig, cbHttpClient, circuitHealth);
+//     } else {
+//         return createCookieClient(uri, configuration, cookieStore);
+//     }
+// }
 
-function createRetryClient(string url, ClientConfiguration configuration, CookieStore? cookieStore) returns HttpClient|ClientError {
-    var retryConfig = configuration.retryConfig;
-    if (retryConfig is RetryConfig) {
-        boolean[] statusCodes = populateErrorCodeIndex(retryConfig.statusCodes);
-        RetryInferredConfig retryInferredConfig = {
-            count: retryConfig.count,
-            intervalInMillis: retryConfig.intervalInMillis,
-            backOffFactor: retryConfig.backOffFactor,
-            maxWaitIntervalInMillis: retryConfig.maxWaitIntervalInMillis,
-            statusCodes: statusCodes
-        };
-        var httpCookieClient = createCookieClient(url, configuration, cookieStore);
-        if (httpCookieClient is HttpClient) {
-            return new RetryClient(url, configuration, retryInferredConfig, httpCookieClient);
-        }
-        return httpCookieClient;
-    }
-    return createCookieClient(url, configuration, cookieStore);
-}
+// function createRetryClient(string url, ClientConfiguration configuration, CookieStore? cookieStore) returns HttpClient|ClientError {
+//     var retryConfig = configuration.retryConfig;
+//     if (retryConfig is RetryConfig) {
+//         boolean[] statusCodes = populateErrorCodeIndex(retryConfig.statusCodes);
+//         RetryInferredConfig retryInferredConfig = {
+//             count: retryConfig.count,
+//             intervalInMillis: retryConfig.intervalInMillis,
+//             backOffFactor: retryConfig.backOffFactor,
+//             maxWaitIntervalInMillis: retryConfig.maxWaitIntervalInMillis,
+//             statusCodes: statusCodes
+//         };
+//         var httpCookieClient = createCookieClient(url, configuration, cookieStore);
+//         if (httpCookieClient is HttpClient) {
+//             return new RetryClient(url, configuration, retryInferredConfig, httpCookieClient);
+//         }
+//         return httpCookieClient;
+//     }
+//     return createCookieClient(url, configuration, cookieStore);
+// }
 
-function createCookieClient(string url, ClientConfiguration configuration, CookieStore? cookieStore) returns HttpClient|ClientError {
-    var cookieConfigVal = configuration.cookieConfig;
-    if (cookieConfigVal is CookieConfig) {
-        if (!cookieConfigVal.enabled) {
-            return createDefaultClient(url, configuration);
-        }
-        if (configuration.cache.enabled) {
-            var httpCachingClient = createHttpCachingClient(url, configuration, configuration.cache);
-            if (httpCachingClient is HttpClient) {
-                return new CookieClient(url, configuration, cookieConfigVal, httpCachingClient, cookieStore);
-            }
-            return httpCachingClient;
-        }
-        var httpSecureClient = createHttpSecureClient(url, configuration);
-        if (httpSecureClient is HttpClient) {
-            return new CookieClient(url, configuration, cookieConfigVal, httpSecureClient, cookieStore);
-        }
-        return httpSecureClient;
-    }
-    return createDefaultClient(url, configuration);
-}
+// function createCookieClient(string url, ClientConfiguration configuration, CookieStore? cookieStore) returns HttpClient|ClientError {
+//     var cookieConfigVal = configuration.cookieConfig;
+//     if (cookieConfigVal is CookieConfig) {
+//         if (!cookieConfigVal.enabled) {
+//             return createDefaultClient(url, configuration);
+//         }
+//         if (configuration.cache.enabled) {
+//             var httpCachingClient = createHttpCachingClient(url, configuration, configuration.cache);
+//             if (httpCachingClient is HttpClient) {
+//                 return new CookieClient(url, configuration, cookieConfigVal, httpCachingClient, cookieStore);
+//             }
+//             return httpCachingClient;
+//         }
+//         var httpSecureClient = createHttpSecureClient(url, configuration);
+//         if (httpSecureClient is HttpClient) {
+//             return new CookieClient(url, configuration, cookieConfigVal, httpSecureClient, cookieStore);
+//         }
+//         return httpSecureClient;
+//     }
+//     return createDefaultClient(url, configuration);
+// }
 
-function createDefaultClient(string url, ClientConfiguration configuration) returns HttpClient|ClientError {
-    if (configuration.cache.enabled) {
-        return createHttpCachingClient(url, configuration, configuration.cache);
-    }
-    return createHttpSecureClient(url, configuration);
-}
+// function createDefaultClient(string url, ClientConfiguration configuration) returns HttpClient|ClientError {
+//     if (configuration.cache.enabled) {
+//         return createHttpCachingClient(url, configuration, configuration.cache);
+//     }
+//     return createHttpSecureClient(url, configuration);
+// }
 
 function processResponse(Response|PayloadType|ClientError result, TargetType targetType) returns @tainted
         Response|PayloadType|ClientError {
