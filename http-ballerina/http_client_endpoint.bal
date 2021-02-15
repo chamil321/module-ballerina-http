@@ -63,6 +63,21 @@ public client class Client {
         }
     }
 
+
+
+    // remote function post(string path, RequestMessage message, TargetType targetType = Response)
+    //         returns targetType|ClientError = @java:Method {
+    //     'class: "org.ballerinalang.net.http.actions.httpclient.ExternRemoteMethod"
+    // } external;
+
+    // remote function post(string path, RequestMessage message, TargetType targetType = Response)
+    //         returns targetType|ClientError = @java:Method {
+    //     'class: "org.ballerinalang.net.http.actions.httpclient.ExternRemoteMethod",
+    //     paramTypes: ["io.ballerina.runtime.api.Environment", "java.lang.Object",
+    //                  "io.ballerina.runtime.api.values.BString", "java.lang.Object", 
+    //                  "io.ballerina.runtime.api.values.BTypedesc"]
+    // } external;
+
     # The `Client.post()` function can be used to send HTTP POST requests to HTTP endpoints.
     #
     # + path - Resource path
@@ -72,7 +87,7 @@ public client class Client {
     #                `record {| anydata...; |}[]`), which is expected to be returned after data binding
     # + return - The response or the payload (if the `targetType` is configured) or an `http:ClientError` if failed to
     #            establish the communication with the upstream server or a data binding failure
-    remote function post(@untainted string path, RequestMessage message, TargetType targetType = Response)
+    remote function post(@untainted string path, RequestMessage message, TargetType targetType)
             returns @tainted Response|PayloadType|ClientError {
         // TODO improve signature once issue https://github.com/ballerina-platform/ballerina-spec/issues/386 is resolved
         // Dependently typed function signature support for ballerina function is required.
@@ -475,7 +490,7 @@ function initialize(string serviceUrl, ClientConfiguration config, CookieStore? 
         int lastIndex = url.length() - 1;
         url = url.substring(0, lastIndex);
     }
-    return createClient(url, config);
+    return createHttpCachingClient(url, config, config.cache);
     // var cbConfig = config.circuitBreaker;
     // if (cbConfig is CircuitBreakerConfig) {
     //     if (url.endsWith("/")) {

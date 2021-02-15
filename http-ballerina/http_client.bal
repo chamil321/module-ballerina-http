@@ -50,8 +50,16 @@ public client class HttpClient {
     #            establish the communication with the upstream server or a data binding failure
     remote function post(@untainted string path, RequestMessage message, TargetType targetType = Response)
                 returns Response|PayloadType|ClientError {
-        return externExecuteClientAction(self, path, <Request>message, HTTP_POST);
+
+        return self.myaction(path, <Request>message, HTTP_POST);
     }
+
+    isolated function myaction(string path, Request req, string httpMethod)
+                                  returns Response|ClientError =
+    @java:Method {
+        'class: "org.ballerinalang.net.http.actions.httpclient.HttpClientAction",
+        name: "executeClientAction"
+    } external;
 
     # The `HttpClient.head()` function can be used to send HTTP HEAD requests to HTTP endpoints.
     #
