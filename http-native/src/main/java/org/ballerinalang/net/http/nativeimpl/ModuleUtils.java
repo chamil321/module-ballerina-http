@@ -20,8 +20,11 @@ package org.ballerinalang.net.http.nativeimpl;
 
 import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.Module;
+import io.ballerina.runtime.api.Runtime;
 import io.ballerina.runtime.api.utils.StringUtils;
+import io.ballerina.runtime.api.values.BObject;
 import io.ballerina.runtime.api.values.BString;
+import org.ballerinalang.net.http.ValueCreatorUtils;
 
 /**
  * This class will hold module related utility functions.
@@ -30,15 +33,32 @@ import io.ballerina.runtime.api.values.BString;
  */
 public class ModuleUtils {
 
+    private static Runtime runtime;
     private static Module httpModule;
+    private static BObject errorObj;
 
     private ModuleUtils() {}
 
     public static void setModule(Environment env) {
+        runtime = env.getRuntime();
         httpModule = env.getCurrentModule();
+        errorObj = ValueCreatorUtils.createErrorObject();
     }
 
     public static BString getModuleIdentifier() {
         return StringUtils.fromString(httpModule.toString());
+    }
+
+    /**
+     * Gets ballerina error object.
+     *
+     * @return http error object.
+     */
+    public static BObject getHttpErrorObject() {
+        return errorObj;
+    }
+
+    public static Runtime getRuntime() {
+        return runtime;
     }
 }

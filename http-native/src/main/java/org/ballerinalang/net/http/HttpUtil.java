@@ -20,6 +20,7 @@ package org.ballerinalang.net.http;
 
 import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.Module;
+import io.ballerina.runtime.api.async.Callback;
 import io.ballerina.runtime.api.creators.ErrorCreator;
 import io.ballerina.runtime.api.types.MethodType;
 import io.ballerina.runtime.api.utils.JsonUtils;
@@ -59,6 +60,7 @@ import org.ballerinalang.mime.util.MultipartDataSource;
 import org.ballerinalang.mime.util.MultipartDecoder;
 import org.ballerinalang.net.http.caching.RequestCacheControlObj;
 import org.ballerinalang.net.http.caching.ResponseCacheControlObj;
+import org.ballerinalang.net.http.nativeimpl.ModuleUtils;
 import org.ballerinalang.net.http.websocket.WebSocketConstants;
 import org.ballerinalang.net.transport.contract.HttpResponseFuture;
 import org.ballerinalang.net.transport.contract.HttpWsConnectorFactory;
@@ -102,6 +104,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.ballerina.runtime.api.constants.RuntimeConstants.BALLERINA_VERSION;
@@ -563,13 +567,54 @@ public class HttpUtil {
     }
 
     public static BError createHttpError(String message, HttpErrorType errorType) {
-        return ErrorCreator.createDistinctError(errorType.getErrorName(), PROTOCOL_HTTP_PKG_ID,
-                                                fromString(message));
+//        return ErrorCreator.createDistinctError(errorType.getErrorName(), PROTOCOL_HTTP_PKG_ID,
+//                                                fromString(message));
+        return createDistinctError(message, errorType, null);
     }
 
     public static BError createHttpError(String message, HttpErrorType errorType, BError cause) {
-        return ErrorCreator.createDistinctError(errorType.getErrorName(), PROTOCOL_HTTP_PKG_ID,
-                                                fromString(message), cause);
+//        return ErrorCreator.createDistinctError(errorType.getErrorName(), PROTOCOL_HTTP_PKG_ID,
+//                                                fromString(message), cause);
+        return createDistinctError(message, errorType, cause);
+    }
+
+    private static BError createDistinctError(String message, HttpErrorType errorType, BError cause) {
+        Object[] paramFeed = new Object[6];
+        paramFeed[0] = fromString(errorType.getErrorName());
+        paramFeed[1] = true;
+        paramFeed[2] = fromString(message);
+        paramFeed[3] = true;
+        paramFeed[4] = cause;
+        paramFeed[5] = true;
+
+        CountDownLatch latch = new CountDownLatch(1);
+        final BError[] balError = new BError[1];
+        Callback callback = new Callback() {
+            @Override
+            public void notifySuccess(Object result) {
+                balError[0] = (BError) result;
+                latch.countDown();
+            }
+
+            @Override
+            public void notifyFailure(BError result) {
+                balError[0] = result;
+                latch.countDown();
+            }
+        };
+        ModuleUtils.getRuntime().invokeMethodAsync(ModuleUtils.getHttpErrorObject(), "createError", null, null,
+                                                   callback, paramFeed);
+        try {
+            int timeout = 120;
+            boolean countDownReached = latch.await(timeout, TimeUnit.SECONDS);
+            if (!countDownReached) {
+                throw ErrorCreator.createError(StringUtils.fromString(
+                        "Could not complete error creation within " + timeout + " seconds"));
+            }
+        } catch (InterruptedException e) {
+            log.warn("Interrupted before completing the error creation");
+        }
+        return balError[0];
     }
 
     // TODO: Find a better way to get the error type than String matching.

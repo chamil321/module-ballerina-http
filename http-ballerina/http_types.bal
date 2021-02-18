@@ -93,10 +93,6 @@ public type CompressionConfig record {|
     string[] contentTypes = [];
 |};
 
-type HTTPError record {
-    string message = "";
-};
-
 # Common client configurations for the next level clients.
 #
 # + httpVersion - The HTTP version understood by the client

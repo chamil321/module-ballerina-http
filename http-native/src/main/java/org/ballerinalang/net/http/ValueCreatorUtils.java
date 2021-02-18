@@ -28,6 +28,7 @@ import static org.ballerinalang.mime.util.MimeConstants.MEDIA_TYPE;
 import static org.ballerinalang.mime.util.MimeConstants.PROTOCOL_MIME_PKG_ID;
 import static org.ballerinalang.net.http.HttpConstants.CALLER;
 import static org.ballerinalang.net.http.HttpConstants.ENTITY;
+import static org.ballerinalang.net.http.HttpConstants.HTTP_ERROR;
 import static org.ballerinalang.net.http.HttpConstants.PROTOCOL_HTTP_PKG_ID;
 import static org.ballerinalang.net.http.HttpConstants.PUSH_PROMISE;
 import static org.ballerinalang.net.http.HttpConstants.REQUEST;
@@ -73,6 +74,10 @@ public class ValueCreatorUtils {
 
     public static BObject createCallerObject() {
         return createObjectValue(PROTOCOL_HTTP_PKG_ID, CALLER);
+    }
+
+    public static BObject createErrorObject() {
+        return createObjectValue(PROTOCOL_HTTP_PKG_ID, HTTP_ERROR);
     }
     
     /**

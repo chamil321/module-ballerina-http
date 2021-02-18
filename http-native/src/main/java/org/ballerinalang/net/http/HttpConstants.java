@@ -228,8 +228,6 @@ public class HttpConstants {
     public static final int HTTP_MESSAGE_INDEX = 0;
     public static final int ENTITY_INDEX = 1;
 
-    public static final String HTTP_ERROR_CODE = "{ballerina/http}HTTPError";
-    public static final String HTTP_ERROR_RECORD = "HTTPError";
     public static final BString HTTP_ERROR_MESSAGE = StringUtils.fromString("message");
     public static final BString HTTP_ERROR_STATUS_CODE = StringUtils.fromString("statusCode");
     public static final String HTTP_CLIENT_REQUEST_ERROR = "ClientRequestError";
@@ -479,6 +477,7 @@ public class HttpConstants {
     public static final String MODULE = "http";
 
     // Ballerina error types related constants
+    public static final String HTTP_ERROR = "HTTPError";
     public static final String HTTP_ERROR_DETAIL_RECORD = "Detail";
 
     public static final String PROTOCOL_PACKAGE_HTTP =
