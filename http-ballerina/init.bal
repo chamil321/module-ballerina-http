@@ -16,10 +16,17 @@
 
 import ballerina/jballerina.java;
 
+final Client defaultClient = check new("");
+
 function init() {
     setModule();
+    initDefaultClient();
 }
 
 function setModule() = @java:Method {
     'class: "org.ballerinalang.net.http.nativeimpl.ModuleUtils"
 } external;
+
+function initDefaultClient() {
+    // defaultClient = checkpanic new("");
+}
